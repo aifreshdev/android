@@ -1,0 +1,25 @@
+{
+  "status": 200,
+  "list": {
+    "Friend List": [
+      {
+        "Name": "May",
+        "Phone / Tel no.": 42822212
+      },
+      {
+        "Name": "Jack",
+        "Phone / Tel no.": 29292222
+      }
+    ],
+    "Family List": [
+      {
+        "Name": "Vincent",
+        "Phone / Tel no.": 92822212
+      },
+      {
+        "Name": "John",
+        "Phone / Tel no.": 92922111
+      }
+    ]
+  }
+}
