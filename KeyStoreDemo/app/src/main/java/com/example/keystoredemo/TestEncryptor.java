@@ -5,29 +5,19 @@ import android.os.Build;
 import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
-import android.support.annotation.RequiresApi;
 import android.util.Base64;
 import android.util.Log;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.charset.Charset;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -40,34 +30,33 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.IvParameterSpec;
 import javax.security.auth.x500.X500Principal;
 
 import static java.security.spec.RSAKeyGenParameterSpec.F4;
 
-public class Encryptor {
+public class TestEncryptor {
 
     private Context mContext;
-    private String TAG = "Encryptor";
+    private String TAG = "TestEncryptor";
     private String mAlias = "sample-alias";
 
     private final String ANDROID_KEY_STORE = "AndroidKeyStore";
 
-    private static Encryptor sInstance;
+    private static TestEncryptor sInstance;
     private byte[] mIV;
 
     /**
      * Cipher.getInstance(type/block/paddingtype e.g : RSA/ECB/PKCS1Padding)
      */
-    public synchronized static Encryptor getInstance(Context context) {
+    public synchronized static TestEncryptor getInstance(Context context) {
         if (sInstance == null) {
-            sInstance = new Encryptor(context);
+            sInstance = new TestEncryptor(context);
         }
 
         return sInstance;
     }
 
-    private Encryptor(Context context) {
+    private TestEncryptor(Context context) {
         mContext = context;
         if(!isSigningKey(mAlias)) {
             createCertificate();

@@ -2,7 +2,6 @@ package com.example.keystoredemo;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -11,12 +10,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        String str = "Hello World!";
-//        String encryptData = Encryptor.getInstance(this).encrypt(str);
-//        String decryptData = Encryptor.getInstance(this).decrypt(encryptData);
+        //RSAEncrypt.getInstance(this).clear().init("sample-alias");
 
-        //Encryptor.getInstance(this).delete();
-        String e = Encryptor.getInstance(this).rasEncrypt(str);
-        String s = Encryptor.getInstance(this).rasDecrypt(e);
+        String str = "Hello World!";
+        RSAEncrypt.getInstance(this).init("sample-alias");
+        String enStr = RSAEncrypt.getInstance(this).getEncrypt(str);
+        String deStr = RSAEncrypt.getInstance(this).getDecrypt(enStr);
+
+//        String encryptData = TestEncryptor.getInstance(this).encrypt(str);
+//        String decryptData = TestEncryptor.getInstance(this).decrypt(encryptData);
+
+        //TestEncryptor.getInstance(this).delete();
+        //String e = TestEncryptor.getInstance(this).rasEncrypt(str);
+        //String s = TestEncryptor.getInstance(this).rasDecrypt(e);
     }
 }
