@@ -26,6 +26,7 @@ public class KeyStoreWrapper {
 
     /**
      * https://proandroiddev.com/secure-data-in-android-encryption-in-android-part-2-991a89e55a23
+     * https://developer.android.com/reference/android/security/keystore/KeyGenParameterSpec
      */
     private final String TAG = "KeyStoreWrapper";
     private final String KS_PROVIDER = "AndroidKeyStore";
