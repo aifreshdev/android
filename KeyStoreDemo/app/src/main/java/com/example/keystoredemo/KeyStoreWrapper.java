@@ -7,19 +7,24 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Log;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.security.Key;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.Calendar;
 import java.util.Enumeration;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
 
 public class KeyStoreWrapper {
@@ -27,9 +32,11 @@ public class KeyStoreWrapper {
     /**
      * https://proandroiddev.com/secure-data-in-android-encryption-in-android-part-2-991a89e55a23
      * https://developer.android.com/reference/android/security/keystore/KeyGenParameterSpec
+     * https://docs.oracle.com/javase/7/docs/api/javax/crypto/Cipher.html
      */
     private final String TAG = "KeyStoreWrapper";
     private final String KS_PROVIDER = "AndroidKeyStore";
+    private final String HASH_ALGORITHM = "SHA-256";
     private final KeyStore mKeyStore = getKeyStore();
     private final Context mContext;
 
@@ -55,6 +62,7 @@ public class KeyStoreWrapper {
 
     public void initWithAes(String alias){
         setAlias(alias);
+        //genSecretKey();
     }
 
     public KeyStoreWrapper clear() {
@@ -94,21 +102,49 @@ public class KeyStoreWrapper {
         return null;
     }
 
+//    public SecretKey getSecretKey(){
+//        try{
+//            return (SecretKey) mKeyStore.getKey(mAlias, null);
+//        }catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        return null;
+//    }
+//
+//    public SecretKey getSecretKeyWithJ(){
+//        try{
+//            return KeyGenerator.getInstance("AES", "BC").generateKey();
+//        }catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        return null;
+//    }
+
+    public SecretKeySpec getSecretKeySpec() throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        MessageDigest digest = MessageDigest.getInstance(HASH_ALGORITHM);
+        byte[] bytes = mAlias.getBytes("UTF-8");
+        digest.update(bytes, 0, bytes.length);
+        byte[] key = digest.digest();
+        SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+        return secretKeySpec;
+    }
+
+
     public SecretKey getSecretKey() {
         try {
-            KeyGenerator kpGenerator = null;
-
+            KeyGenerator kpGenerator;
             if (hasMarshmallow()) {
                 // set ANDROID_KEY_STORE & alias into keystore
                 kpGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KS_PROVIDER);
                 kpGenerator.init(new KeyGenParameterSpec.Builder(mAlias,
                         KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                         .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
-                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7).build());
+                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE).build());
 
-                return kpGenerator.generateKey();
             }else{
-                kpGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES);
+                kpGenerator = KeyGenerator.getInstance("AES");
             }
 
             return kpGenerator.generateKey();

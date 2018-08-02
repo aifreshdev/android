@@ -38,6 +38,8 @@ public class RSAEncrypt {
      * API 19 : cipher.provider.name = AndroidOpenSSL
      * API 23, 24 : cipher.provider.name = AndroidKeyStoreBCWorkaround
      * AndroidKeyStore does not provide RSA/ECB/PKCS1Padding
+     * RSA keys sizes are: 512, 768, 1024, 2048, 3072, 4096
+     * Ref : https://developer.android.com/training/articles/keystore#SupportedKeyPairGenerators
      * @return
      */
 

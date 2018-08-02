@@ -65,13 +65,16 @@ public class TestEncryptor {
 
     private SecretKey genAESSecretKey() {
         try {
-            KeyGenerator kpGenerator = KeyGenerator.getInstance("AES", ANDROID_KEY_STORE);
+            KeyGenerator kpGenerator;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // set ANDROID_KEY_STORE & alias into keystore
+                kpGenerator = KeyGenerator.getInstance("AES", ANDROID_KEY_STORE);
                 kpGenerator.init(new KeyGenParameterSpec.Builder(mAlias,
                         KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                         .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                         .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE).build());
+            }else{
+                kpGenerator = KeyGenerator.getInstance("AES");
             }
 
             return kpGenerator.generateKey();

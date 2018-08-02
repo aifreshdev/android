@@ -1,6 +1,7 @@
 package com.example.keystoredemo;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Base64;
 
 import java.nio.charset.Charset;
@@ -9,18 +10,27 @@ import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.AlgorithmParameterSpec;
 
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 public class AESEncrypt {
 
-    private final String TRANSFORMATION_SYMMETRIC = "AES/CBC/PKCS7Padding";
+    private final int TAG_LENGTH_BYTES = 16;
+    private final String TRANSFORMATION_SYMMETRIC = "AES/CBC/NoPadding";
     private final Context mContext;
     private KeyStoreWrapper mKeyStoreWrapper;
     private static AESEncrypt sInstance;
+    private byte[] mIvSpec;
 
     public static synchronized AESEncrypt getInstance(Context context) {
         if (sInstance == null) {
@@ -44,9 +54,11 @@ public class AESEncrypt {
             SecretKey secretKey = mKeyStoreWrapper.getSecretKey();
             Cipher cipher = Cipher.getInstance(TRANSFORMATION_SYMMETRIC);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+
+            mIvSpec = cipher.getIV();
+
             byte[] bytes = cipher.doFinal(inputStr.getBytes(Charset.forName("UTF-8")));
             return Base64.encodeToString(bytes, Base64.DEFAULT);
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -58,7 +70,7 @@ public class AESEncrypt {
         try {
             SecretKey secretKey = mKeyStoreWrapper.getSecretKey();
             Cipher cipher = Cipher.getInstance(TRANSFORMATION_SYMMETRIC);
-            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(128, mIvSpec));
             byte[] encryptedData = Base64.decode(inputStr, Base64.DEFAULT);
             byte[] decodedData = cipher.doFinal(encryptedData);
             return new String(decodedData, Charset.forName("UTF-8"));
@@ -67,6 +79,24 @@ public class AESEncrypt {
         }
 
         return null;
+    }
+
+    private AlgorithmParameterSpec getAlgorithmParams(final byte[] buf, int offset, int len) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return new GCMParameterSpec(TAG_LENGTH_BYTES * 8, buf, offset, len);
+        }
+
+        // GCMParameterSpec should always be present in Java 7 or newer, but it's missing on
+        // some Android devices with API level <= 19. Fortunately, we can initialize the cipher
+        // with just an IvParameterSpec. It will use a tag size of 128 bits.
+        return new IvParameterSpec(buf, offset, len);
+    }
+
+    private byte[] getRandomIv(){
+        SecureRandom r = new SecureRandom();
+        byte[] ivBytes = new byte[16];
+        r.nextBytes(ivBytes);
+        return ivBytes;
     }
 
     private String getWrapKey(Key secretKey, PublicKey publicKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException {
