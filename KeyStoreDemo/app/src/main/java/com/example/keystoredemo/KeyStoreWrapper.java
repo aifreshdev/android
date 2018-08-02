@@ -5,10 +5,12 @@ import android.os.Build;
 import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
+import android.util.Base64;
 import android.util.Log;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.security.Key;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -22,8 +24,10 @@ import java.security.interfaces.RSAPrivateKey;
 import java.util.Calendar;
 import java.util.Enumeration;
 
+import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
 
@@ -36,11 +40,10 @@ public class KeyStoreWrapper {
      */
     private final String TAG = "KeyStoreWrapper";
     private final String KS_PROVIDER = "AndroidKeyStore";
-    private final String HASH_ALGORITHM = "SHA-256";
     private final KeyStore mKeyStore = getKeyStore();
     private final Context mContext;
 
-    private String mAlias = "sample-alias";
+    private String mAlias = "secret";
     private static KeyStoreWrapper sInstance;
 
     public static synchronized KeyStoreWrapper getInstance(Context context){
@@ -57,12 +60,11 @@ public class KeyStoreWrapper {
 
     public void initWithRsa(String alias){
         setAlias(alias);
-        rsaKeyCreator(alias);
+        createKeys(alias);
     }
 
     public void initWithAes(String alias){
         setAlias(alias);
-        //genSecretKey();
     }
 
     public KeyStoreWrapper clear() {
@@ -102,37 +104,56 @@ public class KeyStoreWrapper {
         return null;
     }
 
-//    public SecretKey getSecretKey(){
-//        try{
-//            return (SecretKey) mKeyStore.getKey(mAlias, null);
-//        }catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        return null;
-//    }
-//
-//    public SecretKey getSecretKeyWithJ(){
-//        try{
-//            return KeyGenerator.getInstance("AES", "BC").generateKey();
-//        }catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        return null;
-//    }
+    public SecretKey getSecretKey(){
+        try{
+            return (SecretKey) mKeyStore.getKey(mAlias, null);
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
 
-    public SecretKeySpec getSecretKeySpec() throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        MessageDigest digest = MessageDigest.getInstance(HASH_ALGORITHM);
-        byte[] bytes = mAlias.getBytes("UTF-8");
-        digest.update(bytes, 0, bytes.length);
-        byte[] key = digest.digest();
-        SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
-        return secretKeySpec;
+        return null;
+    }
+    /**
+     *
+     * @param inputStr
+     * API 19 : cipher.provider.name = AndroidOpenSSL
+     * API 23, 24 : cipher.provider.name = AndroidKeyStoreBCWorkaround
+     * AndroidKeyStore does not provide RSA/ECB/PKCS1Padding
+     * RSA keys sizes are: 512, 768, 1024, 2048, 3072, 4096
+     * Ref : https://developer.android.com/training/articles/keystore#SupportedKeyPairGenerators
+     * @return
+     */
+
+    public String encryptKey(String inputStr){
+        try {
+            PublicKey publicKey = getPublicKey();
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+            byte[] bytes = cipher.doFinal(inputStr.getBytes(Charset.forName("UTF-8")));
+            return Base64.encodeToString(bytes, Base64.NO_WRAP | Base64.NO_PADDING);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
+    public String decryptKey(String inputStr){
+        try {
+            PrivateKey privateKey = getPrivateKey();
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.DECRYPT_MODE, privateKey);
+            byte[] encryptedData = Base64.decode(inputStr, Base64.NO_WRAP | Base64.NO_PADDING);
+            byte[] decodedData = cipher.doFinal(encryptedData);
+            return new String(decodedData, Charset.forName("UTF-8"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-    public SecretKey getSecretKey() {
+        return null;
+    }
+
+    private SecretKey createSecretKey() {
         try {
             KeyGenerator kpGenerator;
             if (hasMarshmallow()) {
@@ -155,7 +176,7 @@ public class KeyStoreWrapper {
         return null;
     }
 
-    private void rsaKeyCreator(String alias) {
+    private void createKeys(String alias) {
         // getInstance(“algorithm”, “provider”)
         if(!isSigningKey(alias)) {
             Calendar start = Calendar.getInstance();
@@ -211,7 +232,7 @@ public class KeyStoreWrapper {
         if(alias != null) {
             try {
                 KeyStore.Entry entry = getEntry(alias);
-                return !mKeyStore.containsAlias(alias) && entry != null;
+                return mKeyStore.containsAlias(alias) && entry != null;
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -1,36 +1,46 @@
 package com.example.keystoredemo;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.util.Base64;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.Key;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.AlgorithmParameterSpec;
 
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import static android.content.Context.MODE_PRIVATE;
+
 public class AESEncrypt {
 
-    private final int TAG_LENGTH_BYTES = 16;
-    private final String TRANSFORMATION_SYMMETRIC = "AES/CBC/NoPadding";
+    private final String TRANSFORMATION_SYMMETRIC = "AES/GCM/NoPadding";
+    private final String HASH_ALGORITHM = "SHA-256";
+
     private final Context mContext;
     private KeyStoreWrapper mKeyStoreWrapper;
+    private SecretKeySpec mSecretKeySpec;
+    private KeyCache mKeyCache;
+    private byte[] mIvBytes;
     private static AESEncrypt sInstance;
-    private byte[] mIvSpec;
 
     public static synchronized AESEncrypt getInstance(Context context) {
         if (sInstance == null) {
@@ -42,21 +52,82 @@ public class AESEncrypt {
 
     public AESEncrypt(Context context) {
         mContext = context;
+        mKeyCache = new KeyCache(context);
     }
 
     public void init(String alias) {
         mKeyStoreWrapper = KeyStoreWrapper.getInstance(mContext);
-        mKeyStoreWrapper.initWithAes(alias);
+        mKeyStoreWrapper.initWithRsa(alias);
+        mSecretKeySpec = getSecretKeySpec(alias);
+
+        String ivFile = mContext.getCacheDir()+"/iv.txt";
+        //String aliasFile = mContext.getCacheDir()+"/alias.txt";
+        //String aliass = readFileData(aliasFile);
+        String iv = readFileData(ivFile);
+
+//        if(aliass == null) {
+//            writeFileData(aliasFile, mKeyStoreWrapper.encryptKey(alias));
+//        }else{
+//            mKeyStoreWrapper.decryptKey(aliass);
+//        }
+
+        if(iv != null){
+            mIvBytes = hexToBytes(mKeyStoreWrapper.decryptKey(iv));
+        }else{
+            mIvBytes = getRandomIv();
+            writeFileData(ivFile, mKeyStoreWrapper.encryptKey(bytesToHex(mIvBytes)));
+        }
+
+        if(mIvBytes == null || mIvBytes.length == 0){
+            mIvBytes = getRandomIv();
+        }
+
+    }
+
+    public void writeFileData(String path, String data) {
+        try {
+            FileOutputStream fout = new FileOutputStream(new File(path));
+            fout.write(data.getBytes());
+            fout.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String readFileData(String path){
+        try {
+            FileInputStream fin = new FileInputStream(new File(path));
+            int lenght = fin.available();
+            byte[] buffer = new byte[lenght];
+            fin.read(buffer);
+
+            return new String(buffer, Charset.forName("UTF-8"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private SecretKeySpec getSecretKeySpec(String password) {
+        try {
+            final MessageDigest digest = MessageDigest.getInstance(HASH_ALGORITHM);
+            byte[] bytes = password.getBytes("UTF-8");
+            digest.update(bytes, 0, bytes.length);
+            byte[] key = digest.digest();
+            SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+            return secretKeySpec;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     public String getEncrypt(String inputStr) {
         try {
-            SecretKey secretKey = mKeyStoreWrapper.getSecretKey();
             Cipher cipher = Cipher.getInstance(TRANSFORMATION_SYMMETRIC);
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-
-            mIvSpec = cipher.getIV();
-
+            cipher.init(Cipher.ENCRYPT_MODE, mSecretKeySpec, new IvParameterSpec(mIvBytes));
             byte[] bytes = cipher.doFinal(inputStr.getBytes(Charset.forName("UTF-8")));
             return Base64.encodeToString(bytes, Base64.DEFAULT);
         } catch (Exception e) {
@@ -68,9 +139,8 @@ public class AESEncrypt {
 
     public String getDecrypt(String inputStr) {
         try {
-            SecretKey secretKey = mKeyStoreWrapper.getSecretKey();
             Cipher cipher = Cipher.getInstance(TRANSFORMATION_SYMMETRIC);
-            cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(128, mIvSpec));
+            cipher.init(Cipher.DECRYPT_MODE, mSecretKeySpec, new IvParameterSpec(mIvBytes));
             byte[] encryptedData = Base64.decode(inputStr, Base64.DEFAULT);
             byte[] decodedData = cipher.doFinal(encryptedData);
             return new String(decodedData, Charset.forName("UTF-8"));
@@ -81,35 +151,65 @@ public class AESEncrypt {
         return null;
     }
 
-    private AlgorithmParameterSpec getAlgorithmParams(final byte[] buf, int offset, int len) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return new GCMParameterSpec(TAG_LENGTH_BYTES * 8, buf, offset, len);
-        }
-
-        // GCMParameterSpec should always be present in Java 7 or newer, but it's missing on
-        // some Android devices with API level <= 19. Fortunately, we can initialize the cipher
-        // with just an IvParameterSpec. It will use a tag size of 128 bits.
-        return new IvParameterSpec(buf, offset, len);
-    }
-
-    private byte[] getRandomIv(){
+    private byte[] getRandomIv() {
         SecureRandom r = new SecureRandom();
         byte[] ivBytes = new byte[16];
         r.nextBytes(ivBytes);
         return ivBytes;
     }
 
-    private String getWrapKey(Key secretKey, PublicKey publicKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException {
+    private String bytesToHex(byte[] data) {
+        StringBuilder builder = new StringBuilder();
+        for (byte b : data) {
+            builder.append(String.format("%02x", b));
+        }
+        return builder.toString();
+    }
+
+    private byte[] hexToBytes(String data) {
+        if (data == null || data.length() < 2) {
+            return new byte[0];
+        }
+
+        byte[] byteResult = new byte[data.length() / 2];
+        for (int i=0;i<byteResult.length - 1; i++) {
+            int index = i * 2;
+            String str = data.substring(index, index + 2); // e.g ab "cd" ef "gh"
+            byteResult[i] = (byte) Integer.parseInt(str, 16);
+        }
+        return byteResult;
+    }
+
+    private String getWrapKey(Key secretKey, PublicKey publicKey) throws Exception {
         Cipher cipher = Cipher.getInstance(TRANSFORMATION_SYMMETRIC);
         cipher.init(Cipher.WRAP_MODE, publicKey);
         byte[] encryptKey = cipher.wrap(secretKey);
         return Base64.encodeToString(encryptKey, Base64.DEFAULT);
     }
 
-    private Key getUnWrapKey(String wrapperKey, PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException {
+    private Key getUnWrapKey(String wrapperKey, PrivateKey privateKey) throws Exception {
         byte[] decrptyKey = Base64.decode(wrapperKey, Base64.DEFAULT);
         Cipher cipher = Cipher.getInstance(TRANSFORMATION_SYMMETRIC);
         cipher.init(Cipher.UNWRAP_MODE, privateKey);
         return cipher.unwrap(decrptyKey, "AES", Cipher.SECRET_KEY);
+    }
+
+    private class KeyCache{
+        private SharedPreferences pref;
+        private SharedPreferences.Editor editor;
+
+        public KeyCache(Context context){
+            pref = context.getSharedPreferences("keys", MODE_PRIVATE);
+            editor = pref.edit();
+        }
+
+        public SharedPreferences.Editor putString(String key, String val){
+            editor.putString(key, val).apply();
+            return editor;
+        }
+
+        public String getString(String key){
+            return pref.getString(key, "");
+        }
     }
 }
