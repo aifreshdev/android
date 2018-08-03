@@ -1,34 +1,21 @@
 package com.example.keystoredemo;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.os.Build;
 import android.util.Base64;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.charset.Charset;
-import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.spec.AlgorithmParameterSpec;
 
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
-import static android.content.Context.MODE_PRIVATE;
 
 public class AESEncrypt {
 
@@ -38,7 +25,6 @@ public class AESEncrypt {
     private final Context mContext;
     private KeyStoreWrapper mKeyStoreWrapper;
     private SecretKeySpec mSecretKeySpec;
-    private KeyCache mKeyCache;
     private byte[] mIvBytes;
     private static AESEncrypt sInstance;
 
@@ -52,7 +38,6 @@ public class AESEncrypt {
 
     public AESEncrypt(Context context) {
         mContext = context;
-        mKeyCache = new KeyCache(context);
     }
 
     public void init(String alias) {
@@ -60,7 +45,7 @@ public class AESEncrypt {
         mKeyStoreWrapper.initWithRsa(alias);
         mSecretKeySpec = getSecretKeySpec(alias);
 
-        String ivFile = mContext.getCacheDir()+"/iv.txt";
+        String ivFile = mContext.getCacheDir() + "/iv.txt";
         //String aliasFile = mContext.getCacheDir()+"/alias.txt";
         //String aliass = readFileData(aliasFile);
         String iv = readFileData(ivFile);
@@ -71,17 +56,34 @@ public class AESEncrypt {
 //            mKeyStoreWrapper.decryptKey(aliass);
 //        }
 
-        if(iv != null){
+        if (iv != null) {
             mIvBytes = hexToBytes(mKeyStoreWrapper.decryptKey(iv));
-        }else{
+        } else {
             mIvBytes = getRandomIv();
             writeFileData(ivFile, mKeyStoreWrapper.encryptKey(bytesToHex(mIvBytes)));
         }
 
-        if(mIvBytes == null || mIvBytes.length == 0){
+        if (mIvBytes == null || mIvBytes.length == 0) {
             mIvBytes = getRandomIv();
         }
 
+    }
+
+    /**
+     * @param filename
+     * @param data     Save RSA key, don't use SharedPreference
+     */
+    public void saveKey(String filename, String data) {
+        String path = mContext.getCacheDir() + "/" + filename;
+        writeFileData(path, data);
+    }
+
+    /**
+     * @param filename Save RSA key in cache file, don't use SharedPreference
+     */
+    public String readKey(String filename) {
+        String path = mContext.getCacheDir() + "/" + filename;
+        return readFileData(path);
     }
 
     public void writeFileData(String path, String data) {
@@ -94,7 +96,7 @@ public class AESEncrypt {
         }
     }
 
-    public String readFileData(String path){
+    public String readFileData(String path) {
         try {
             FileInputStream fin = new FileInputStream(new File(path));
             int lenght = fin.available();
@@ -172,7 +174,7 @@ public class AESEncrypt {
         }
 
         byte[] byteResult = new byte[data.length() / 2];
-        for (int i=0;i<byteResult.length - 1; i++) {
+        for (int i = 0; i < byteResult.length - 1; i++) {
             int index = i * 2;
             String str = data.substring(index, index + 2); // e.g ab "cd" ef "gh"
             byteResult[i] = (byte) Integer.parseInt(str, 16);
@@ -192,24 +194,5 @@ public class AESEncrypt {
         Cipher cipher = Cipher.getInstance(TRANSFORMATION_SYMMETRIC);
         cipher.init(Cipher.UNWRAP_MODE, privateKey);
         return cipher.unwrap(decrptyKey, "AES", Cipher.SECRET_KEY);
-    }
-
-    private class KeyCache{
-        private SharedPreferences pref;
-        private SharedPreferences.Editor editor;
-
-        public KeyCache(Context context){
-            pref = context.getSharedPreferences("keys", MODE_PRIVATE);
-            editor = pref.edit();
-        }
-
-        public SharedPreferences.Editor putString(String key, String val){
-            editor.putString(key, val).apply();
-            return editor;
-        }
-
-        public String getString(String key){
-            return pref.getString(key, "");
-        }
     }
 }
