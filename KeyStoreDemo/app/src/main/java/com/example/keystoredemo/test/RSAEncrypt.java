@@ -1,4 +1,4 @@
-package com.example.keystoredemo;
+package com.example.keystoredemo.test;
 
 import android.content.Context;
 import android.util.Base64;

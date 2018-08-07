@@ -1,4 +1,4 @@
-package com.example.keystoredemo;
+package com.example.keystoredemo.test;
 
 import android.content.Context;
 import android.os.Build;
@@ -138,7 +138,7 @@ public class TestEncryptor {
 
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
 
-                // Below Android M, use the KeyPairGeneratorSpec.Builder.
+                // Below Android M, use the KeyPairGeneratorSpec.CryptBuilder.
                 kpGenerator.initialize(new KeyPairGeneratorSpec.Builder(mContext)
                         // You'll use the alias later to retrieve the key. It's a key
                         // for the key!

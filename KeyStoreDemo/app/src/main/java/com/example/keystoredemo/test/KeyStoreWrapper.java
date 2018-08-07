@@ -1,4 +1,4 @@
-package com.example.keystoredemo;
+package com.example.keystoredemo.test;
 
 import android.content.Context;
 import android.os.Build;
@@ -21,36 +21,47 @@ import java.util.Calendar;
 import java.util.Enumeration;
 
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import javax.security.auth.x500.X500Principal;
 
-public class KsEncrypt {
+public class KeyStoreWrapper {
 
-    private final String TAG = "KsEncrypt";
-    // provider : AndroidKeyStore, AndroidOpenSSL, AndroidKeyStoreBCWorkaround
+    /**
+     * https://proandroiddev.com/secure-data-in-android-encryption-in-android-part-2-991a89e55a23
+     * https://developer.android.com/reference/android/security/keystore/KeyGenParameterSpec
+     * https://docs.oracle.com/javase/7/docs/api/javax/crypto/Cipher.html
+     */
+    private final String TAG = "KeyStoreWrapper";
     private final String KS_PROVIDER = "AndroidKeyStore";
     private final KeyStore mKeyStore = getKeyStore();
-    private static KsEncrypt sInstance;
-    private Context mContext;
-    private String mAlias = "sample-alias";
+    private final Context mContext;
 
-    public static synchronized KsEncrypt getInstance(Context context){
+    private String mAlias = "secret";
+    private static KeyStoreWrapper sInstance;
+
+    public static synchronized KeyStoreWrapper getInstance(Context context){
         if(sInstance == null){
-            sInstance = new KsEncrypt(context);
+            sInstance = new KeyStoreWrapper(context);
         }
 
         return sInstance;
     }
 
-    private KsEncrypt(Context context){
+    private KeyStoreWrapper(Context context){
         mContext = context;
     }
 
-    public void init(String alias){
+    public void initWithRsa(String alias){
         setAlias(alias);
-        keyCreator(alias);
+        createKeys(alias);
     }
 
-    public KsEncrypt clear() {
+    public void initWithAes(String alias){
+        setAlias(alias);
+    }
+
+    public KeyStoreWrapper clear() {
         try {
             mKeyStore.deleteEntry(mAlias);
         } catch (Exception e) {
@@ -73,23 +84,13 @@ public class KsEncrypt {
         mAlias = alias;
     }
 
-    /**
-     *
-     * @param inputStr
-     * API 19 : cipher.provider.name = AndroidOpenSSL
-     * API 23, 24 : cipher.provider.name = AndroidKeyStoreBCWorkaround
-     * AndroidKeyStore does not provide RSA/ECB/PKCS1Padding
-     * @return
-     */
-
-    public String getEncrypt(String inputStr){
+    private KeyStore getKeyStore() {
         try {
-            PublicKey publicKey = getPublicKey(mAlias);
-            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-            byte[] bytes = cipher.doFinal(inputStr.getBytes(Charset.forName("UTF-8")));
-            return Base64.encodeToString(bytes, Base64.DEFAULT);
-
+            // getInstance(“type”, “provider”)
+            KeyStore keyStore = KeyStore.getInstance(KS_PROVIDER);
+            keyStore.load(null);
+            Log.i(TAG, "AlgorithmType : " + keyStore.getType() + ", Provider : " + keyStore.getProvider());
+            return keyStore;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -97,12 +98,46 @@ public class KsEncrypt {
         return null;
     }
 
-    public String getDecrypt(String inputStr){
+    public SecretKey getSecretKey(){
+        try{
+            return (SecretKey) mKeyStore.getKey(mAlias, null);
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+    /**
+     *
+     * @param inputStr
+     * API 19 : cipher.provider.name = AndroidOpenSSL
+     * API 23, 24 : cipher.provider.name = AndroidKeyStoreBCWorkaround
+     * AndroidKeyStore does not provide RSA/ECB/PKCS1Padding
+     * RSA keys sizes are: 512, 768, 1024, 2048, 3072, 4096
+     * Ref : https://developer.android.com/training/articles/keystore#SupportedKeyPairGenerators
+     * @return
+     */
+
+    public String encryptKey(String inputStr){
         try {
-            PrivateKey privateKey = getPrivateKey(mAlias);
+            PublicKey publicKey = getPublicKey();
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+            byte[] bytes = cipher.doFinal(inputStr.getBytes(Charset.forName("UTF-8")));
+            return Base64.encodeToString(bytes, Base64.NO_WRAP | Base64.NO_PADDING);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public String decryptKey(String inputStr){
+        try {
+            PrivateKey privateKey = getPrivateKey();
             Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
-            byte[] encryptedData = Base64.decode(inputStr, Base64.DEFAULT);
+            byte[] encryptedData = Base64.decode(inputStr, Base64.NO_WRAP | Base64.NO_PADDING);
             byte[] decodedData = cipher.doFinal(encryptedData);
             return new String(decodedData, Charset.forName("UTF-8"));
         } catch (Exception e) {
@@ -112,13 +147,22 @@ public class KsEncrypt {
         return null;
     }
 
-    private KeyStore getKeyStore() {
+    private SecretKey createSecretKey() {
         try {
-            // getInstance(“type”, “provider”)
-            KeyStore keyStore = KeyStore.getInstance(KS_PROVIDER);
-            keyStore.load(null);
-            Log.i(TAG, "Type : " + keyStore.getType() + ", Provider : " + keyStore.getProvider());
-            return keyStore;
+            KeyGenerator kpGenerator;
+            if (hasMarshmallow()) {
+                // set ANDROID_KEY_STORE & alias into keystore
+                kpGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KS_PROVIDER);
+                kpGenerator.init(new KeyGenParameterSpec.Builder(mAlias,
+                        KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                        .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE).build());
+
+            }else{
+                kpGenerator = KeyGenerator.getInstance("AES");
+            }
+
+            return kpGenerator.generateKey();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -126,7 +170,7 @@ public class KsEncrypt {
         return null;
     }
 
-    private void keyCreator(String alias) {
+    private void createKeys(String alias) {
         // getInstance(“algorithm”, “provider”)
         if(!isSigningKey(alias)) {
             Calendar start = Calendar.getInstance();
@@ -159,12 +203,12 @@ public class KsEncrypt {
         }
     }
 
-    private PublicKey getPublicKey(String alias) throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
-        return getEntry(alias).getCertificate().getPublicKey();
+    public PublicKey getPublicKey() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
+        return getEntry(mAlias).getCertificate().getPublicKey();
     }
 
-    private PrivateKey getPrivateKey(String alias) throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
-        return getEntry(alias).getPrivateKey();
+    public PrivateKey getPrivateKey() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
+        return getEntry(mAlias).getPrivateKey();
     }
 
     private KeyStore.PrivateKeyEntry getEntry(String alias) throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
@@ -182,7 +226,7 @@ public class KsEncrypt {
         if(alias != null) {
             try {
                 KeyStore.Entry entry = getEntry(alias);
-                return !mKeyStore.containsAlias(alias) && entry != null;
+                return mKeyStore.containsAlias(alias) && entry != null;
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -194,4 +238,5 @@ public class KsEncrypt {
     private boolean hasMarshmallow(){
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
     }
+
 }
