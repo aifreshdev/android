@@ -1,27 +1,25 @@
-package com.example.camerasurfacedemo;
+package com.example.camerasurfacedemo.capture;
 
 import android.content.Context;
-import android.graphics.Camera;
 import android.os.Build;
 
-import com.example.camerasurfacedemo.camera.CameraCompat;
-import com.example.camerasurfacedemo.camera.support.CameraObject;
+import com.example.camerasurfacedemo.capture.camera2.CameraObject;
 
 public class CameraBuilder {
 
     private Context mContext;
-    private Camera camera;
+    private android.graphics.Camera camera;
     private int mCameraId = -1;
 
     public CameraBuilder(Context context){
         mContext = context;
     }
 
-    public CameraCompat getCamera(){
+    public CameraInterface getCamera(){
         if(hasLollipop()){
             return new CameraObject(mContext);
         }else {
-            return new com.example.camerasurfacedemo.camera.support.CameraObject(mContext);
+            return new com.example.camerasurfacedemo.capture.camera.CameraObject(mContext);
         }
     }
 
