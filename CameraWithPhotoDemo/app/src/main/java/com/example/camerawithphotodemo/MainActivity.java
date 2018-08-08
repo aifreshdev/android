@@ -8,6 +8,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import com.example.camerawithphotodemo.imagepicker.MultiplePhotoPicker;
+
 public class MainActivity extends AppCompatActivity {
 
     /**
@@ -26,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
         imgPickerBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                openDefaultMultiplePicker();
+                MultiplePhotoPicker.open(MainActivity.this);
             }
         });
     }
