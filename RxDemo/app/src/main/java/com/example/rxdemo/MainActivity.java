@@ -1,22 +1,30 @@
 package com.example.rxdemo;
 
+import android.graphics.Bitmap;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatSpinner;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+
+import com.example.rxdemo.rxmoduel.ObservableEmitterSample;
+import com.example.rxdemo.rxmoduel.ObservableFlatMapSample;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.Observer;
-import io.reactivex.disposables.Disposable;
 
 public class MainActivity extends AppCompatActivity {
 
     private final String TAG = "MainActivity";
     private AppCompatSpinner mSpRxType;
+    private String[] imgUrls = {
+            "https://portaltele.com.ua/wp-content/uploads/2018/07/Xiaomi-Mi-A1-Android-P-52.jpg",
+            "https://cdn3.techadvisor.co.uk/cmsdata/features/3670552/android_popsicle_1600_thumb800.png",
+            "https://cdn.arstechnica.net/wp-content/uploads/2018/03/Android-P-800x426.jpg",
+            "https://www.xda-developers.com/files/2018/03/Android-P.png",
+            "https://cdn.arstechnica.net/wp-content/uploads/2018/04/Google-IO-2018-800x420.png"
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +37,13 @@ public class MainActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
                 switch (position) {
                     case 0:
-                        getSimpleRx();
+                        ObservableEmitterSample.executeEmitter();
+                        break;
+                    case 1:
+                        ObservableEmitterSample.executeDisposableEmitter();
+                        break;
+                    case 2:
+                        ObservableFlatMapSample.sInstance.executeFlatMap();
                         break;
                 }
             }
@@ -41,40 +55,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void getSimpleRx() {
-        Observable.create(new ObservableOnSubscribe<Integer>() {
-            @Override
-            public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
-                emitter.onNext(1);
-                emitter.onNext(2);
-                emitter.onNext(3);
-                emitter.onComplete();
-
-                emitter.onNext(4);
-                emitter.onNext(5);
-                emitter.onNext(6);
-                emitter.onComplete();
-            }
-        }).subscribe(new Observer<Integer>() {
-            @Override
-            public void onSubscribe(Disposable d) {
-                Log.d(TAG, "subscribe");
-            }
-
-            @Override
-            public void onNext(Integer value) {
-                Log.d(TAG, "" + value);
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                Log.d(TAG, "error");
-            }
-
-            @Override
-            public void onComplete() {
-                Log.d(TAG, "complete");
-            }
-        });
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        ObservableFlatMapSample.sInstance.dispose();
     }
 }
