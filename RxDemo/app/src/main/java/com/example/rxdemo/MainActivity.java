@@ -10,6 +10,7 @@ import android.widget.ImageView;
 
 import com.example.rxdemo.rxmoduel.ObservableEmitterSample;
 import com.example.rxdemo.rxmoduel.ObservableFlatMapSample;
+import com.example.rxdemo.rxmoduel.ObservableMapSample;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -51,6 +52,9 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case 3:
                         ObservableFlatMapSample.sInstance.executeFlatMap();
+                        break;
+                    case 3:
+                        ObservableMapSample.sInstance.executeMap().subscribe(ObservableMapSample.sInstance.getObserver());
                         break;
                 }
             }

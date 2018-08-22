@@ -6,6 +6,7 @@
         <item>Emitter Bitmap</item>
         <item>Emitter Disposable</item>
         <item>FlatMap</item>
+        <item>Map</item>
     </array>
 
 </resources>
