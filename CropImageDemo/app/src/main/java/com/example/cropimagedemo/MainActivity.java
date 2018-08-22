@@ -32,6 +32,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.touchTestBtn4:
                 startActivity(new Intent(this, TouchTestActivity4.class));
                 break;
+            case R.id.cropTestBtn4:
+                startActivity(new Intent(this, CropTestActivity.class));
+                break;
         }
     }
 

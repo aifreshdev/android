@@ -691,7 +691,10 @@ public class ImageCropView extends ImageView {
     }
 
     protected float getScale(Matrix matrix) {
-        return getValue(matrix, Matrix.MSCALE_X);
+        float scalex = getValue(matrix, Matrix.MSCALE_X);
+        float skewy = getValue(matrix, Matrix.MSKEW_Y);
+        float scale = (float) Math.sqrt(scalex * scalex + skewy * skewy);
+        return Math.abs(scale);
     }
 
     @SuppressLint("Override")
@@ -1162,6 +1165,13 @@ public class ImageCropView extends ImageView {
     public boolean onSingleTapUp(MotionEvent e) {
         if (mBitmapChanged) return false;
         return true;
+    }
+
+    public void setImageRotation(float degress){
+        PointF center = getCenter();
+
+        mSuppMatrix.postRotate(degress, center.x, center.y);
+        setImageMatrix(getImageViewMatrix());
     }
 
     public class GestureListener extends GestureDetector.SimpleOnGestureListener {
