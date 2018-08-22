@@ -8,6 +8,7 @@ import android.view.View;
 import com.example.cropimagedemo.demo.example_1.TouchTestActivity;
 import com.example.cropimagedemo.demo.example_2.TouchTestActivity2;
 import com.example.cropimagedemo.demo.example_3.TouchTestActivity3;
+import com.example.cropimagedemo.demo.example_4.TouchTestActivity4;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,6 +28,9 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case R.id.touchTestBtn3:
                 startActivity(new Intent(this, TouchTestActivity3.class));
+                break;
+            case R.id.touchTestBtn4:
+                startActivity(new Intent(this, TouchTestActivity4.class));
                 break;
         }
     }

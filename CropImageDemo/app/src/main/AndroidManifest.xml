@@ -22,6 +22,7 @@
         <activity android:name=".demo.example_1.TouchTestActivity" />
         <activity android:name=".demo.example_2.TouchTestActivity2" />
         <activity android:name=".demo.example_3.TouchTestActivity3" />
+        <activity android:name=".demo.example_4.TouchTestActivity4" />
     </application>
 
 </manifest>
