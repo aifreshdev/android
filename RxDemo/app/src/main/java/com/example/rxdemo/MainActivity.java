@@ -9,6 +9,7 @@ import android.widget.AdapterView;
 
 import com.example.rxdemo.rxmoduel.ObservableEmitterSample;
 import com.example.rxdemo.rxmoduel.ObservableFlatMapSample;
+import com.example.rxdemo.rxmoduel.ObservableMapSample;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -44,6 +45,9 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case 2:
                         ObservableFlatMapSample.sInstance.executeFlatMap();
+                        break;
+                    case 3:
+                        ObservableMapSample.sInstance.executeMap().subscribe(ObservableMapSample.sInstance.getObserver());
                         break;
                 }
             }

@@ -39,7 +39,7 @@ import android.view.ScaleGestureDetector;
 import android.view.ViewConfiguration;
 import android.widget.ImageView;
 
-import com.example.cropimagedemo.imagecrop.R;
+import com.example.cropimagedemo.R;
 import com.example.cropimagedemo.imagecrop.model.CropInfo;
 import com.example.cropimagedemo.imagecrop.util.BitmapLoadUtils;
 import com.example.cropimagedemo.imagecrop.view.graphics.FastBitmapDrawable;

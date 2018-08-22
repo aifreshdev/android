@@ -1,27 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.example.cropimagedemo.view.CropView
-        android:id="@+id/ivCropView"
+    <Button
+        android:id="@+id/touchTestBtn"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:onClick="OnButtonClick"
+        android:text="Touch Test"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!--<FrameLayout-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent">-->
+    <Button
+        android:id="@+id/touchTestBtn2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:onClick="OnButtonClick"
+        android:text="Touch Test 2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/touchTestBtn" />
 
-        <!--<com.example.cropimagedemo.view.TouchImageView-->
-            <!--android:id="@+id/ivPhoto"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent" />-->
-
-        <!--<com.example.cropimagedemo.view.CropOverlyView-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent" />-->
-
-    <!--</FrameLayout>-->
-
-</LinearLayout>
+    <Button
+        android:id="@+id/touchTestBtn3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:onClick="OnButtonClick"
+        android:text="Touch Test 3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/touchTestBtn2" />
+</android.support.constraint.ConstraintLayout>
