@@ -1,6 +1,12 @@
 package com.example.rxdemo.rxmoduel;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
+import android.widget.ImageView;
+
+import com.example.rxdemo.R;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -92,6 +98,45 @@ public class ObservableEmitterSample {
             @Override
             public void onComplete() {
                 Log.d(TAG, "complete");
+            }
+        });
+    }
+
+    public static void executeBitmapEmiter(final Context Context){
+        Observable.create(new ObservableOnSubscribe<Bitmap>() {
+
+            @Override
+            public void subscribe(final ObservableEmitter<Bitmap> emitter) throws Exception {
+                final ImageView imageView = new ImageView(Context);
+                imageView.setImageResource(R.mipmap.android_p);
+//                imageView.post(new Runnable() {
+//                    @Override
+//                    public void run() {
+                        emitter.onNext(((BitmapDrawable)imageView.getDrawable()).getBitmap());
+//                    }
+//                });
+
+                emitter.onComplete();
+            }
+        }).subscribe(new Observer<Bitmap>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+                Log.i(TAG, "onSubscribe: ");
+            }
+
+            @Override
+            public void onNext(Bitmap bitmap) {
+                Log.i(TAG, "onNext: ");
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.i(TAG, "onError: ");
+            }
+
+            @Override
+            public void onComplete() {
+                Log.i(TAG, "onComplete: ");
             }
         });
     }

@@ -3,6 +3,7 @@
 
     <array name="rx_type">
         <item>Emitter</item>
+        <item>Emitter Bitmap</item>
         <item>Emitter Disposable</item>
         <item>FlatMap</item>
     </array>

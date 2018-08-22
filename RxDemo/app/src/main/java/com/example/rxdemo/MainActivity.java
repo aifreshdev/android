@@ -6,9 +6,13 @@ import android.os.Bundle;
 import android.support.v7.widget.AppCompatSpinner;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 
 import com.example.rxdemo.rxmoduel.ObservableEmitterSample;
 import com.example.rxdemo.rxmoduel.ObservableFlatMapSample;
+
+import java.lang.ref.WeakReference;
+import java.util.HashMap;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -25,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
             "https://www.xda-developers.com/files/2018/03/Android-P.png",
             "https://cdn.arstechnica.net/wp-content/uploads/2018/04/Google-IO-2018-800x420.png"
     };
-
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,9 +44,12 @@ public class MainActivity extends AppCompatActivity {
                         ObservableEmitterSample.executeEmitter();
                         break;
                     case 1:
-                        ObservableEmitterSample.executeDisposableEmitter();
+                        ObservableEmitterSample.executeBitmapEmiter(MainActivity.this);
                         break;
                     case 2:
+                        ObservableEmitterSample.executeDisposableEmitter();
+                        break;
+                    case 3:
                         ObservableFlatMapSample.sInstance.executeFlatMap();
                         break;
                 }
