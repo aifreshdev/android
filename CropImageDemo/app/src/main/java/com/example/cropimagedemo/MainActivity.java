@@ -9,6 +9,8 @@ import com.example.cropimagedemo.demo.example_1.TouchTestActivity;
 import com.example.cropimagedemo.demo.example_2.TouchTestActivity2;
 import com.example.cropimagedemo.demo.example_3.TouchTestActivity3;
 import com.example.cropimagedemo.demo.example_4.TouchTestActivity4;
+import com.example.cropimagedemo.demo.example_5.TouchTestActivity5;
+import com.example.cropimagedemo.demo.example_6.TouchTestActivity6;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,6 +33,12 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case R.id.touchTestBtn4:
                 startActivity(new Intent(this, TouchTestActivity4.class));
+                break;
+            case R.id.touchTestBtn5:
+                startActivity(new Intent(this, TouchTestActivity5.class));
+                break;
+            case R.id.touchTestBtn6:
+                startActivity(new Intent(this, TouchTestActivity6.class));
                 break;
             case R.id.cropTestBtn4:
                 startActivity(new Intent(this, CropTestActivity.class));
