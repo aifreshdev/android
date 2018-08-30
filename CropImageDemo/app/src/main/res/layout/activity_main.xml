@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
     <Button
-        android:id="@+id/cropTestBtn4"
+        android:id="@+id/cropTestBtn1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -18,6 +19,18 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
+        android:id="@+id/cropTestBtn2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:onClick="OnButtonClick"
+        android:text="Cropiwa Test"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cropTestBtn1" />
+
+    <Button
         android:id="@+id/touchTestBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -25,8 +38,9 @@
         android:onClick="OnButtonClick"
         android:text="Touch Test"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cropTestBtn4" />
+        app:layout_constraintTop_toBottomOf="@+id/cropTestBtn2" />
 
     <Button
         android:id="@+id/touchTestBtn2"
