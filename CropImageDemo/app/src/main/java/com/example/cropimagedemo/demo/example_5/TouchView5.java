@@ -106,6 +106,18 @@ public class TouchView5 extends AppCompatImageView implements ViewTreeObserver.O
     }
 
     private void drawGrid(Canvas canvas) {
+        /*
+                            Row
+                 ---------(X0, Y0)------------
+                 |                           |
+                 |                           |
+         Column  (X0, Y0) ------------ (X1, Y1)
+                 |                           |
+                 |                           |
+                 |                           |
+                 ---------(X1, Y1)------------
+         */
+
         int index = 0;
         int rowWidth = mLayoutWidht / mGridLineRow;
         int colWidth = mLayoutHeight / mGridLineCol;

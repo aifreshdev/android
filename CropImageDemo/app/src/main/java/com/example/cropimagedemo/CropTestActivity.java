@@ -22,6 +22,29 @@ public class CropTestActivity extends AppCompatActivity {
     }
 
     public void OnButtonClick(View v){
-        ivCropView.setImageRotation(-90);
+        switch (v.getId()){
+            case R.id.rotateBtn:
+                ivCropView.setCropSquare(false);
+                ivCropView.setImageRotation(-90);
+                break;
+            case R.id.radio32Btn:
+                ivCropView.setCropSquare(false);
+                ivCropView.setAspectRatio(3, 2);
+                ivCropView.resetDisplay();
+                ivCropView.resetMatrix();
+                break;
+            case R.id.radio23Btn:
+                ivCropView.setCropSquare(false);
+                ivCropView.setAspectRatio(2, 3);
+                ivCropView.resetDisplay();
+                ivCropView.resetMatrix();
+                break;
+            case R.id.squareBtn:
+//                ivCropView.setCropSquare(true);
+                ivCropView.setAspectRatio(1, 1);
+                ivCropView.resetDisplay();
+                ivCropView.resetMatrix();
+                break;
+        }
     }
 }

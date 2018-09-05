@@ -30,6 +30,14 @@ public class TouchTestActivity6 extends AppCompatActivity {
             case R.id.restoreBtn:
                 touchView.restore();
                 break;
+            case R.id.ratioBtn1:
+                touchView.setRatio(3, 2);
+                touchView.setMargin(10, 10, 10, 10);
+                break;
+            case R.id.ratioBtn2:
+                touchView.setRatio(2, 3);
+                touchView.setMargin(10, 10, 10, 10);
+                break;
         }
     }
 }

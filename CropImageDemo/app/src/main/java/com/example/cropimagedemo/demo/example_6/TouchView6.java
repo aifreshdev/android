@@ -43,6 +43,10 @@ public class TouchView6 extends AppCompatImageView implements ViewTreeObserver.O
     private int mImgWidth;
     private int mImgHeight;
 
+    // 3:2
+    private float mCropRatio = 1.5f;
+    private int[] mCropMargin = new int[4];
+
     // float: Array of points to draw [x0 y0 x1 y1 x2 y2 ...]
     // must contain at least 4 values
     private float[] mGridLines;
@@ -50,7 +54,8 @@ public class TouchView6 extends AppCompatImageView implements ViewTreeObserver.O
     private int mGridLineCol = 3;
     private Paint mGridLinePaint;
 
-    private RectF mCropRect = new RectF();
+    private String mCropTransColor = "#99000000";
+    private RectF mCropRectF = new RectF();
     private Paint mCropPaint = new Paint();
 
     private boolean mInitLayout;
@@ -83,6 +88,24 @@ public class TouchView6 extends AppCompatImageView implements ViewTreeObserver.O
         mGridLinePaint.setColor(Color.RED);
         mGridLinePaint.setStyle(Paint.Style.STROKE);
         mGridLinePaint.setStrokeWidth(1);
+
+        mCropPaint.setColor(Color.parseColor(mCropTransColor));
+    }
+
+    public void setRatio(float widthRatio, float heightRatio){
+        mCropRatio = heightRatio / widthRatio;
+        calculateCropRectF();
+        postInvalidate();
+    }
+
+    public void setMargin(int left, int top, int right, int bottom){
+        mCropMargin[0] = left;
+        mCropMargin[1] = top;
+        mCropMargin[2] = right;
+        mCropMargin[3] = bottom;
+
+        calculateCropRectF();
+        postInvalidate();
     }
 
     @Override
@@ -110,9 +133,48 @@ public class TouchView6 extends AppCompatImageView implements ViewTreeObserver.O
         drawGrid(canvas);
     }
 
+    private void calculateCropRectF(){
+        /*
+         * e.g 3:2
+         * ratio = height / width
+         * height = width * ratio (1.5)
+         * width = height / ratio (1.5)
+         */
+
+        int cropHeight = (int) (mLayoutWidht * mCropRatio);
+        int cropWidth = (int) (mLayoutHeight / mCropRatio);
+        /*
+          -------------------
+          |   -----------   |
+          |   |  center |   |
+          |---|----x----|---|
+          |   |         |   |
+          |   -----------   |
+          -------------------
+         */
+
+        int leftMargin = mCropMargin[0];
+        int topMargin = mCropMargin[1];
+        int rightMargin = mCropMargin[2];
+        int bottomMargin = mCropMargin[3];
+
+        int centerX = (mLayoutWidht - leftMargin - rightMargin) / 2;
+        int centerY = (mLayoutHeight - topMargin - bottomMargin) / 2;
+
+        int halfCropWidth = cropWidth / 2;
+        int halfCropHeight = cropHeight / 2;
+
+        int rectLeft = centerX - halfCropWidth;
+        int rectRight = centerX + halfCropWidth;
+        int rectTop = centerY - halfCropHeight;
+        int rectBottom = centerY + halfCropHeight;
+
+        mCropRectF.set(rectLeft, rectTop, rectRight, rectBottom);
+
+    }
 
     private void drawTransparentLayer(Canvas canvas) {
-        /*-
+        /*
           -------------------------------------
           |                top                |
           -------------------------------------
@@ -126,16 +188,49 @@ public class TouchView6 extends AppCompatImageView implements ViewTreeObserver.O
           -------------------------------------
          */
 
+        /*
+           Get this view rect on screen
+         */
         Rect r = new Rect();
         getLocalVisibleRect(r);
 
-        canvas.drawRect(r.left, r.top, r.right, mCropRect.top, mCropPaint);                          // top
-        canvas.drawRect(r.left, mCropRect.bottom, r.right, r.bottom, mCropPaint);                    // bottom
-        canvas.drawRect(r.left, mCropRect.top, mCropRect.left, mCropRect.bottom, mCropPaint);        // left
-        canvas.drawRect(mCropRect.right, mCropRect.top, r.right, mCropRect.bottom, mCropPaint);      // right
+        printRect(r);
+        printRectF(mCropRectF);
+
+        Paint p = new Paint();
+
+        // left
+        p.setColor(Color.BLUE);
+        canvas.drawRect(r.left, mCropRectF.top, mCropRectF.left, mCropRectF.bottom, p);
+
+        // top
+        p.setColor(Color.RED);
+        canvas.drawRect(r.left, r.top, r.right, mCropRectF.top, p);
+
+        // right
+        p.setColor(Color.GREEN);
+        canvas.drawRect(mCropRectF.right, mCropRectF.top, r.right, mCropRectF.bottom, p);
+
+        // bottom
+        p.setColor(Color.YELLOW);
+        canvas.drawRect(r.left, mCropRectF.bottom, r.right, r.bottom, p);
+
     }
 
     private void drawGrid(Canvas canvas) {
+
+        /*
+                            Row
+                 ---------(X0, Y0)------------
+                 |                           |
+                 |                           |
+         Column  (X0, Y0) ------------ (X1, Y1)
+                 |                           |
+                 |                           |
+                 |                           |
+                 ---------(X1, Y1)------------
+         */
+
         int index = 0;
         int rowWidth = mLayoutWidht / mGridLineRow;
         int colWidth = mLayoutHeight / mGridLineCol;
@@ -194,6 +289,14 @@ public class TouchView6 extends AppCompatImageView implements ViewTreeObserver.O
         mImgWidth = drawable.getIntrinsicWidth();
         mImgHeight = drawable.getIntrinsicHeight();
 
+        /**
+         * calculate mCropRectF
+         */
+        calculateCropRectF();
+
+        /*
+         * calculate image scale
+         */
         float scale = 1f;
 
         if (mImgWidth > mLayoutWidht && mImgHeight <= mLayoutHeight)
@@ -250,9 +353,11 @@ public class TouchView6 extends AppCompatImageView implements ViewTreeObserver.O
             if((scale < MAX_SCALE && scaleFactor > 1f) /* zoom out */
                     || (scale > DEFAULT_SCALE && scaleFactor < 1f) /* zoom in */) {
 
-                if (scale * scaleFactor < DEFAULT_SCALE) {
+                scale *= scaleFactor;
+
+                if (scale < DEFAULT_SCALE) {
                     targetScale = DEFAULT_SCALE / scale;
-                } else if (scale * scaleFactor > MAX_SCALE) {
+                } else if (scale > MAX_SCALE) {
                     targetScale = MAX_SCALE / scale;
                 }
 
@@ -264,7 +369,15 @@ public class TouchView6 extends AppCompatImageView implements ViewTreeObserver.O
         }
     }
 
-    public void printMatrix(Matrix matrix) {
+    private void printRectF(RectF rect){
+        Log.d(TAG, "RectF {left: "+ rect.left +", top: "+ rect.top +", right: "+ rect.right +", bottom: "+ rect.bottom +"}");
+    }
+
+    private void printRect(Rect rect){
+        Log.d(TAG, "Rect {left: "+ rect.left +", top: "+ rect.top +", right: "+ rect.right +", bottom: "+ rect.bottom +"}");
+    }
+
+    private void printMatrix(Matrix matrix) {
         float scalex = getMatrixValue(matrix, Matrix.MSCALE_X);
         float scaley = getMatrixValue(matrix, Matrix.MSCALE_Y);
         float tx = getMatrixValue(matrix, Matrix.MTRANS_X);

@@ -16,11 +16,39 @@
 
     </FrameLayout>
 
-    <Button
-        android:id="@+id/rotateBtn"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="OnButtonClick"
-        android:text="Rotation" />
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/rotateBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="OnButtonClick"
+            android:text="Rotation" />
+
+        <Button
+            android:id="@+id/radio32Btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="OnButtonClick"
+            android:text="3:2" />
+
+        <Button
+            android:id="@+id/radio23Btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="OnButtonClick"
+            android:text="2:3" />
+
+        <Button
+            android:id="@+id/squareBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="OnButtonClick"
+            android:text="Square" />
+
+    </LinearLayout>
 
 </LinearLayout>

@@ -131,6 +131,7 @@ public class ImageCropView extends ImageView {
     private ImageCropView.OnImageViewTouchSingleTapListener mSingleTapListener;
 
     private boolean isChangingScale = false;
+    private boolean isCropSquare;
 
     private int savedAspectRatioWidth;
     private int savedAspectRatioHeight;
@@ -214,6 +215,10 @@ public class ImageCropView extends ImageView {
         drawGrid(canvas);
     }
 
+    public void setCropSquare(boolean enable){
+        isCropSquare = enable;
+    }
+
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         if (LOG_ENABLED) {
@@ -240,15 +245,21 @@ public class ImageCropView extends ImageView {
             mCenter.y = mThisHeight / 2f;
         }
 
-        int height = (int) (mThisWidth * mTargetAspectRatio);
-        if (height > mThisHeight) {
-            int width = (int) ((mThisHeight - (gridTopBottomMargin * 2)) / mTargetAspectRatio);
-            int halfDiff = (mThisWidth - width) / 2;
-            mCropRect.set(left + halfDiff, top + gridTopBottomMargin, right - halfDiff, bottom - gridTopBottomMargin);
-        } else {
-            height = (int) ((mThisWidth - (gridLeftRightMargin * 2)) * mTargetAspectRatio);
-            int halfDiff = (mThisHeight - height) / 2;
-            mCropRect.set(left + gridLeftRightMargin, halfDiff - top, right - gridLeftRightMargin, height + halfDiff);
+        if(isCropSquare){
+            float size = (mThisWidth > mThisHeight ? mThisHeight : mThisWidth) * 0.5f;
+            int halfDiff = (int) size / 2;
+            mCropRect.set(left + gridLeftRightMargin, mCenter.y - halfDiff + gridTopBottomMargin, mCenter.x + halfDiff + gridLeftRightMargin, mCenter.y + halfDiff);
+        }else {
+            int height = (int) (mThisWidth * mTargetAspectRatio);
+            if (height > mThisHeight) {
+                int width = (int) ((mThisHeight - (gridTopBottomMargin * 2)) / mTargetAspectRatio);
+                int halfDiff = (mThisWidth - width) / 2;
+                mCropRect.set(left + halfDiff, top + gridTopBottomMargin, right - halfDiff, bottom - gridTopBottomMargin);
+            } else {
+                height = (int) ((mThisWidth - (gridLeftRightMargin * 2)) * mTargetAspectRatio);
+                int halfDiff = (mThisHeight - height) / 2;
+                mCropRect.set(left + gridLeftRightMargin, halfDiff - top, right - gridLeftRightMargin, height + halfDiff);
+            }
         }
 
         Runnable r = mLayoutRunnable;
@@ -631,7 +642,7 @@ public class ImageCropView extends ImageView {
             widthScale = viewWidth / w;
             heightScale = viewHeight / h;
 
-            baseScale = Math.min(widthScale, heightScale);
+            baseScale = Math.max(widthScale, heightScale);
             matrix.postScale(baseScale, baseScale);
 
             float tw = (viewWidth - w * baseScale) / 2.0f;
@@ -641,7 +652,7 @@ public class ImageCropView extends ImageView {
             widthScale = viewWidth / w;
             heightScale = viewHeight / h;
 
-            baseScale = Math.min(widthScale, heightScale);
+            baseScale = Math.max(widthScale, heightScale);
             matrix.postScale(baseScale, baseScale);
 
             float tw = (viewWidth - w * baseScale) / 2.0f;

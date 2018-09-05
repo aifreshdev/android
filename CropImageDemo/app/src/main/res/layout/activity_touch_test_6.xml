@@ -36,5 +36,18 @@
             android:onClick="OnButtonClick"
             android:text="Restore" />
 
+        <Button
+            android:id="@+id/ratioBtn1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="OnButtonClick"
+            android:text="3:2" />
+
+        <Button
+            android:id="@+id/ratioBtn2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="OnButtonClick"
+            android:text="2:3" />
     </LinearLayout>
 </LinearLayout>
