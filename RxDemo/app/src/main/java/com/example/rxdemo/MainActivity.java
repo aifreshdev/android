@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 
+import com.example.rxdemo.rxmoduel.ObservableDeferSample;
 import com.example.rxdemo.rxmoduel.ObservableEmitterSample;
 import com.example.rxdemo.rxmoduel.ObservableFlatMapSample;
 import com.example.rxdemo.rxmoduel.ObservableMapSample;
@@ -18,6 +19,8 @@ import java.util.HashMap;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
+import io.reactivex.disposables.Disposable;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -30,11 +33,15 @@ public class MainActivity extends AppCompatActivity {
             "https://www.xda-developers.com/files/2018/03/Android-P.png",
             "https://cdn.arstechnica.net/wp-content/uploads/2018/04/Google-IO-2018-800x420.png"
     };
-    
+
+    private ObservableDeferSample deferSample;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        deferSample = new ObservableDeferSample();
 
         mSpRxType = findViewById(R.id.spRxType);
         mSpRxType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -53,8 +60,12 @@ public class MainActivity extends AppCompatActivity {
                     case 3:
                         ObservableFlatMapSample.sInstance.executeFlatMap();
                         break;
-                    case 3:
+                    case 4:
                         ObservableMapSample.sInstance.executeMap().subscribe(ObservableMapSample.sInstance.getObserver());
+                        break;
+                    case 5:
+                        deferSample.name = "JOJO";
+                        deferSample.valueObservable().subscribe(deferSample.getValueObserver());
                         break;
                 }
             }
