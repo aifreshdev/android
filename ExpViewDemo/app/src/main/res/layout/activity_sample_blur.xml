@@ -14,11 +14,22 @@
         android:scaleType="centerCrop"
         android:src="@mipmap/android_p" />
 
-    <ImageView
-        android:id="@+id/ivBlur"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1" />
+        android:layout_weight="1">
+
+        <ImageView
+            android:id="@+id/ivBlur"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#80000000" />
+
+    </FrameLayout>
 
     <Button
         android:id="@+id/blurBtn"

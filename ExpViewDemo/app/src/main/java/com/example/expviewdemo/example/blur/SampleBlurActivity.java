@@ -3,9 +3,7 @@ package com.example.expviewdemo.example.blur;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -26,7 +24,6 @@ import android.widget.LinearLayout;
 import com.example.expviewdemo.R;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 public class SampleBlurActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -77,6 +74,7 @@ public class SampleBlurActivity extends AppCompatActivity implements View.OnClic
         private ScriptIntrinsicBlur blurScript;
         private Allocation blurOut;
         private Allocation blurIn;
+        private float scale = 0.05f;
 
         public BlurTask(Context context){
             this.context = context;
@@ -111,20 +109,31 @@ public class SampleBlurActivity extends AppCompatActivity implements View.OnClic
          * RenderScript only work on Config.ARGB_8888)
          */
         private Bitmap blur(Bitmap fromBitmap, float blurRadius) {
-            int width = fromBitmap.getWidth() / 3;
-            int height = fromBitmap.getHeight() / 3;
+            int width = Math.round(fromBitmap.getWidth() * scale);
+            int height = Math.round(fromBitmap.getHeight() * scale);
 
-            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            Bitmap bitmap = Bitmap.createScaledBitmap(fromBitmap, width, height, false);
 
-            Canvas canvas = new Canvas(bitmap);
-            Paint paint = new Paint();
-            paint.setFlags(Paint.FILTER_BITMAP_FLAG);
+            /**
+//            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+//            Canvas canvas = new Canvas(bitmap);
+//            Paint paint = new Paint();
+//            paint.setFlags(Paint.FILTER_BITMAP_FLAG);
+              //Make it frosty
+//            paint.setXfermode(
+//                    new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+//            ColorFilter filter =
+//                    new LightingColorFilter(0xFFFFFFFF, 0x00222222); // lighten
+//            //ColorFilter filter =
+//            //   new LightingColorFilter(0xFF7F7F7F, 0x00000000); // darken
+//            paint.setColorFilter(filter);
 
             //build drawing destination boundaries
-            final RectF destRect = new RectF(0, 0, width, height);
-            final Rect srcRect = new Rect(0,0, width, height);
+            //final RectF destRect = new RectF(0, 0, width, height);
+            //final Rect srcRect = new Rect(0,0, width, height);
+            //canvas.drawBitmap(fromBitmap, srcRect, destRect, paint);
+             **/
 
-            canvas.drawBitmap(fromBitmap, srcRect, destRect, paint);
             Bitmap toBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 
             renderScript = RenderScript.create(context);
@@ -140,6 +149,7 @@ public class SampleBlurActivity extends AppCompatActivity implements View.OnClic
             blurScript.forEach(blurOut);
             blurOut.copyTo(toBitmap);
             blurIn.destroy();
+            bitmap.recycle();
 
             return toBitmap;
         }
